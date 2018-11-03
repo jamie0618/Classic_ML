@@ -14,8 +14,8 @@ multi-class classification problem
 
 source: http://archive.ics.uci.edu/ml/datasets/Iris
 
-3. House Price Dataset
+3. Forest Fires Dataset
 
 regression problem
 
-source: https://www.kaggle.com/c/house-prices-advanced-regression-techniques/data
+source: http://archive.ics.uci.edu/ml/datasets/Forest+Fires
