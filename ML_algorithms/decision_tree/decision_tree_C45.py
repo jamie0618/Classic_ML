@@ -66,7 +66,7 @@ class Node:
     def add_child(self, data):
         self.children.append(data)
 
-def decision_tree(df, label_col_name='label'):
+def generate_decision_tree(df, label_col_name='label'):
     
     ### 此節點全部 class 都相同
     if len(np.unique(df[label_col_name])) == 1:
@@ -95,19 +95,23 @@ def decision_tree(df, label_col_name='label'):
         ### 記得要切完之後要把該項 feature 刪去
         df_left = df.loc[df[max_col] < max_decision_stump].drop(max_col, axis=1)
         df_right = df.loc[df[max_col] > max_decision_stump].drop(max_col, axis=1)
-        node.add_child(decision_tree(df_left))
-        node.add_child(decision_tree(df_right))
+        node.add_child(generate_decision_tree(df_left))
+        node.add_child(generate_decision_tree(df_right))
     else:
         node = Node(feature=max_col)
         for value, df_group in df.groupby(max_col):
-            node.add_child(decision_tree(df_group)).drop(max_col, axis=1)
+            node.add_child(generate_decision_tree(df_group)).drop(max_col, axis=1)
  
     return node
+
+def predict(decision_tree, df):
+    
+    return
         
 if __name__ == '__main__':
     
     data_path = os.path.join(lib_path, 'dataset', 'iris', 'iris.data.txt')
     df_train_iris, df_test_iris = load_data.load_iris_dataset(data_path)
     
-    decision_tree = decision_tree(df_train_iris)
+    decision_tree = generate_decision_tree(df_train_iris)
     
