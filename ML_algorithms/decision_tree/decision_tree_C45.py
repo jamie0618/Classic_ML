@@ -73,9 +73,8 @@ def generate_decision_tree(df, label_col_name='label'):
         return Node(label=df[label_col_name].values[0])
         
     ### 此節點全部 feature 都相同，選最多的 class 當最後 label
-    ### 此節點只剩下一個 feature，選最多的 class 當最後 label
     df_check = df.drop([label_col_name], axis=1)
-    if np.all(df_check.eq(df_check.iloc[0]).all(axis=1)) or len(df.columns) == 2:       
+    if np.all(df_check.eq(df_check.iloc[0]).all(axis=1)):   
         label = df[label_col_name].value_counts().index[0]
         return Node(label=label)
 
@@ -98,15 +97,40 @@ def generate_decision_tree(df, label_col_name='label'):
         node.add_child(generate_decision_tree(df_left))
         node.add_child(generate_decision_tree(df_right))
     else:
-        node = Node(feature=max_col)
+        node = Node(feature=max_col, decision_stump=[])
         for value, df_group in df.groupby(max_col):
-            node.add_child(generate_decision_tree(df_group)).drop(max_col, axis=1)
+            node.decision_stump = node.decision_stump.append(value)
+            node.add_child(generate_decision_tree(df_group.drop(max_col, axis=1)))
  
     return node
 
+def predict_data(decision_tree, data):
+    
+    if len(decision_tree.children) == 0:
+        return decision_tree.label
+    else:
+        if type(decision_tree.decision_stump) == list:
+            data_feature = data[decision_tree.feature]
+            child_index = decision_tree.decision_stump.index(data_feature)
+            return predict_data(decision_tree.children[child_index], data)
+        else:
+            if data[decision_tree.feature].values[0] < decision_tree.decision_stump:
+                return predict_data(decision_tree.children[0], data)
+            else:
+                return predict_data(decision_tree.children[1], data)
+                
 def predict(decision_tree, df):
     
-    return
+    y_pred = []
+    for i in range(len(df)):
+        y = predict_data(decision_tree, df.iloc[[i]])
+        y_pred.append(y)
+        
+    return np.array(y_pred)
+
+def accuracy(y_true, y_pred):
+
+    return np.sum( y_true == y_pred ) / len(y_true)   
         
 if __name__ == '__main__':
     
@@ -115,3 +139,10 @@ if __name__ == '__main__':
     
     decision_tree = generate_decision_tree(df_train_iris)
     
+    y_pred_train = predict(decision_tree, df_train_iris)
+    y_pred_test = predict(decision_tree, df_test_iris)
+    y_true_train = df_train_iris['label'].values
+    y_true_test = df_test_iris['label'].values
+
+    print('training accuracy: {}'.format(accuracy(y_true_train, y_pred_train)))
+    print('testing accuracy: {}'.format(accuracy(y_true_test, y_pred_test)))
